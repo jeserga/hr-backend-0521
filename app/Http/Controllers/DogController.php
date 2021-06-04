@@ -3,14 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Models\Dog;
-use App\Models\Owner;
+use App\Repositories\DogRepositoryInterface;
 use Illuminate\Http\Request;
 
 class DogController extends Controller
 {
+    /** @var DogRepositoryInterface */
+    private $repository;
+
+    public function __construct(DogRepositoryInterface $repository)
+    {
+        $this->repository = $repository;
+    }
+
     public function index(Request $request)
     {
-        return Dog::with('owner')->get();
+        return $this->repository->all();
     }
 
     public function create(Request $request): Dog
@@ -20,12 +28,6 @@ class DogController extends Controller
             'owner_id' => 'required',
         ]);
 
-        $owner = Owner::findOrFail($request->input('owner_id'));
-        $dog = new Dog();
-        $dog->name = $request->input('name');
-        $dog->owner()->associate($owner);
-        $dog->save();
-
-        return $dog;
+        return $this->repository->create($request->all());
     }
 }
